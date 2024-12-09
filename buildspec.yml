@@ -14,7 +14,6 @@ phases:
   post_build:
     commands:
       - echo Pushing the Docker image to ECR...
-      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION
       - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - echo Updating ECS task definition...
       - printf '[{"name":"my-container","image":"%s/%s:%s"}]' $ECR_REGISTRY $ECR_REPOSITORY $CODEBUILD_RESOLVED_SOURCE_VERSION > container-definitions.json
