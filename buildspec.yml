@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - echo Cloning repository and preparing to build...
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - docker tag $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION $ECR_REGISTRY/$ECR_REPOSITORY:latest
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      - echo Updating ECS task definition...
+      - printf '[{"name":"my-container","image":"%s/%s:%s"}]' $ECR_REGISTRY $ECR_REPOSITORY $CODEBUILD_RESOLVED_SOURCE_VERSION > container-definitions.json
+      - aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+env:
+  variables:
+    ECR_REGISTRY: "886436924305.dkr.ecr.us-east-2.amazonaws.com"
+    ECR_REPOSITORY: "cake-repository"
+    ECS_CLUSTER: "cakecluster"
+    ECS_SERVICE: "cake2Service"
