@@ -18,6 +18,8 @@ phases:
       - echo Updating ECS task definition...
       - printf '[{"name":"my-container","image":"%s/%s:%s"}]' $ECR_REGISTRY $ECR_REPOSITORY $CODEBUILD_RESOLVED_SOURCE_VERSION > container-definitions.json
       - aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+artifacts:
+    files: imagedefinitions.json
 env:
   variables:
     ECR_REGISTRY: "886436924305.dkr.ecr.us-east-2.amazonaws.com"
